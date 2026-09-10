@@ -8,27 +8,34 @@
   @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
 
   :root {
-    --bg: #0a0a0a;
-    --panel: #141414;
-    --panel-border: #262626;
-    --panel-border-hi: #3a3a3a;
-    --text: #f5f5f5;
-    --text-dim: #8a8a8a;
-    --text-faint: #5c5c5c;
+    --bg: #f2e9d8;
+    --panel: #fbf5e8;
+    --panel-border: #ddccaa;
+    --panel-border-hi: #c3ac7c;
+    --text: #2b2013;
+    --text-dim: #6b5d47;
+    --text-faint: #9c8f72;
 
-    --stop: #c0392b;
-    --stop-bg: #2a1512;
-    --start: #1f9d6e;
-    --start-bg: #0f2019;
-    --amplify: #3163d4;
-    --amplify-bg: #101830;
+    --input-bg: #fffdf7;
+    --btn-bg: #ece0c6;
+    --btn-bg-hover: #e2d3ae;
 
-    --admin: #c99a3a;
-    --admin-bg: #221a0a;
-    --admin-border: #4a3a17;
+    --stop: #b8412f;
+    --stop-bg: #f4ddd3;
+    --start: #227a54;
+    --start-bg: #dcead9;
+    --amplify: #2f4f9e;
+    --amplify-bg: #dbe3f4;
 
-    --danger: #e0483a;
-    --ok: #2fb579;
+    --admin: #9c6b12;
+    --admin-bg: #f3e6c4;
+    --admin-border: #d8bd85;
+
+    --danger: #b8382a;
+    --ok: #1f7a4f;
+
+    --toast-bg: #2b2013;
+    --toast-text: #f5efe0;
   }
 
   * { box-sizing: border-box; }
@@ -145,7 +152,7 @@
   }
 
   .btn {
-    background: #1c1c1c;
+    background: var(--btn-bg);
     color: var(--text);
     border: 1px solid var(--panel-border-hi);
     padding: 9px 16px;
@@ -153,21 +160,21 @@
     font-size: 13px;
     font-weight: 600;
   }
-  .btn:hover { background: #262626; }
+  .btn:hover { background: var(--btn-bg-hover); }
   .btn:disabled { opacity: 0.45; cursor: default; }
 
   .submit-btn {
     margin-top: 10px;
     align-self: flex-end;
-    background: #1c1c1c;
+    background: var(--btn-bg);
     color: var(--text);
-    border: 1px solid var(--panel-border);
+    border: 1px solid var(--panel-border-hi);
     padding: 8px 16px;
     border-radius: 6px;
     font-size: 13px;
     font-weight: 600;
   }
-  .submit-btn:hover { background: #262626; }
+  .submit-btn:hover { background: var(--btn-bg-hover); }
   .submit-btn:disabled { opacity: 0.5; cursor: default; }
 
   .board {
@@ -229,7 +236,7 @@
 
   textarea {
     width: 100%;
-    background: #0e0e0e;
+    background: var(--input-bg);
     border: 1px solid var(--panel-border);
     color: var(--text);
     border-radius: 8px;
@@ -349,7 +356,7 @@
     border: 1px solid var(--danger);
     color: #fff;
   }
-  .btn-danger:hover { background: #c73a2d; }
+  .btn-danger:hover { background: #92291d; }
   .btn-danger:disabled { opacity: 0.45; }
 
   .admin-msg {
@@ -377,8 +384,9 @@
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: #1a1a1a;
-    border: 1px solid var(--panel-border-hi);
+    background: var(--toast-bg);
+    color: var(--toast-text);
+    box-shadow: 0 6px 20px rgba(43, 32, 19, 0.28);
     padding: 10px 20px;
     border-radius: 20px;
     font-size: 13px;
