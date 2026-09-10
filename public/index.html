@@ -486,41 +486,63 @@ function setSyncState(state) {
   document.getElementById('dbBanner').classList.toggle('show', state === 'off');
 }
 
-function renderBoard() {
+// 보드의 틀(제목/입력창/버튼)은 처음 한 번만 만듭니다.
+// 주기적으로 새 의견을 불러올 때 이 부분까지 다시 그리면, 참여자가 입력창에 타이핑 중이던
+// 내용이 도중에 사라지는 문제가 생기기 때문에, 의견 목록 부분만 따로 갱신합니다.
+function renderBoardSkeleton() {
   const board = document.getElementById('board');
   board.innerHTML = '';
   CATEGORIES.forEach(cat => {
     const col = document.createElement('div');
     col.className = 'col';
-    const entries = entriesByCategory[cat.key] || [];
-
     col.innerHTML = `
       <div class="col-head">
         <span class="tag ${cat.key}">${cat.label}</span>
-        <span class="count-badge">${entries.length}건</span>
+        <span class="count-badge" id="count-${cat.key}">0건</span>
       </div>
       <p class="prompt">${cat.prompt}</p>
-      <textarea id="input-${cat.key}" placeholder="의견을 입력하세요..."></textarea>
+      <textarea id="input-${cat.key}" placeholder="의견을 입력하세요 (Enter: 등록 / Shift+Enter: 줄바꿈)"></textarea>
       <button class="submit-btn" data-key="${cat.key}" id="submit-${cat.key}">등록</button>
-      <div class="entries" id="entries-${cat.key}">
-        ${entries.length === 0
-          ? '<div class="empty-state">아직 등록된 의견이 없습니다</div>'
-          : entries.map(e => `
-            <div class="entry ${cat.key}">
-              <div class="entry-meta">
-                <span class="entry-name">${escapeHtml(e.name)}</span>
-                <span class="entry-time">${formatTime(e.ts)}</span>
-              </div>
-              <div class="entry-text">${escapeHtml(e.text)}</div>
-            </div>
-          `).join('')}
-      </div>
+      <div class="entries" id="entries-${cat.key}"></div>
     `;
     board.appendChild(col);
   });
 
   document.querySelectorAll('.submit-btn').forEach(btn => {
     btn.addEventListener('click', () => submitEntry(btn.dataset.key));
+  });
+
+  // Enter로 등록, Shift+Enter는 줄바꿈
+  document.querySelectorAll('textarea[id^="input-"]').forEach(ta => {
+    ta.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        submitEntry(ta.id.replace('input-', ''));
+      }
+    });
+  });
+}
+
+// 의견 목록과 건수만 갱신합니다 (입력창/버튼은 건드리지 않음).
+function renderEntries() {
+  CATEGORIES.forEach(cat => {
+    const entries = entriesByCategory[cat.key] || [];
+    const countEl = document.getElementById(`count-${cat.key}`);
+    if (countEl) countEl.textContent = `${entries.length}건`;
+
+    const container = document.getElementById(`entries-${cat.key}`);
+    if (!container) return;
+    container.innerHTML = entries.length === 0
+      ? '<div class="empty-state">아직 등록된 의견이 없습니다</div>'
+      : entries.map(e => `
+          <div class="entry ${cat.key}">
+            <div class="entry-meta">
+              <span class="entry-name">${escapeHtml(e.name)}</span>
+              <span class="entry-time">${formatTime(e.ts)}</span>
+            </div>
+            <div class="entry-text">${escapeHtml(e.text)}</div>
+          </div>
+        `).join('');
   });
 }
 
@@ -529,7 +551,7 @@ function applyEntries(list) {
   list.forEach(e => { if (fresh[e.category]) fresh[e.category].push(e); });
   Object.keys(fresh).forEach(k => fresh[k].sort((a, b) => b.ts - a.ts));
   entriesByCategory = fresh;
-  renderBoard();
+  renderEntries();
 }
 
 async function loadAll() {
@@ -653,7 +675,7 @@ function setupAdminPanel() {
 }
 
 function init() {
-  renderBoard();
+  renderBoardSkeleton();
   setupAdminPanel();
   document.getElementById('downloadBtn').addEventListener('click', handleDownload);
   loadAll();
