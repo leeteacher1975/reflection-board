@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>팀 리플렉션 보드</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --panel: #141414;
+    --panel-border: #262626;
+    --panel-border-hi: #3a3a3a;
+    --text: #f5f5f5;
+    --text-dim: #8a8a8a;
+    --text-faint: #5c5c5c;
+
+    --stop: #c0392b;
+    --stop-bg: #2a1512;
+    --start: #1f9d6e;
+    --start-bg: #0f2019;
+    --amplify: #3163d4;
+    --amplify-bg: #101830;
+
+    --admin: #c99a3a;
+    --admin-bg: #221a0a;
+    --admin-border: #4a3a17;
+
+    --danger: #e0483a;
+    --ok: #2fb579;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Pretendard', -apple-system, 'Malgun Gothic', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 40px 24px 64px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 6px;
+  }
+
+  h1 {
+    font-size: clamp(22px, 3vw, 28px);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .zeiss-mark {
+    background: #0033a0;
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    padding: 8px 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .sub {
+    color: var(--text-dim);
+    font-size: 14px;
+    margin: 0 0 28px;
+    max-width: 62ch;
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px 24px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+
+  .name-field {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .name-field label {
+    font-size: 13px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  input[type="text"], input[type="password"] {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 9px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+  }
+  #nameInput { width: 180px; }
+  input[type="text"]:focus, input[type="password"]:focus { border-color: var(--panel-border-hi); }
+
+  .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .sync-state {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .sync-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--text-faint);
+  }
+  .sync-dot.live { background: var(--ok); box-shadow: 0 0 0 3px rgba(47,181,121,0.15); }
+  .sync-dot.off { background: var(--danger); }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .btn {
+    background: #1c1c1c;
+    color: var(--text);
+    border: 1px solid var(--panel-border-hi);
+    padding: 9px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .btn:hover { background: #262626; }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+
+  .submit-btn {
+    margin-top: 10px;
+    align-self: flex-end;
+    background: #1c1c1c;
+    color: var(--text);
+    border: 1px solid var(--panel-border);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .submit-btn:hover { background: #262626; }
+  .submit-btn:disabled { opacity: 0.5; cursor: default; }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  @media (max-width: 900px) {
+    .board { grid-template-columns: 1fr; }
+    header { flex-wrap: wrap; }
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .toolbar-right { justify-content: space-between; }
+  }
+
+  .col {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    min-height: 420px;
+  }
+
+  .col-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .tag {
+    display: inline-block;
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 5px;
+    width: fit-content;
+  }
+  .tag.stop { background: var(--stop); }
+  .tag.start { background: var(--start); }
+  .tag.amplify { background: var(--amplify); }
+
+  .count-badge {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .prompt {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.5;
+    margin: 0 0 18px;
+  }
+
+  textarea {
+    width: 100%;
+    background: #0e0e0e;
+    border: 1px solid var(--panel-border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 64px;
+    outline: none;
+  }
+  textarea:focus { border-color: var(--panel-border-hi); }
+
+  .entries {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--panel-border);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    max-height: 340px;
+  }
+
+  .entry {
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+  .entry.stop { background: var(--stop-bg); }
+  .entry.start { background: var(--start-bg); }
+  .entry.amplify { background: var(--amplify-bg); }
+
+  .entry-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    gap: 10px;
+  }
+
+  .entry-name { font-weight: 700; color: var(--text); }
+  .entry-time { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .entry-text { white-space: pre-wrap; word-break: break-word; }
+
+  .empty-state {
+    color: var(--text-faint);
+    font-size: 13px;
+    text-align: center;
+    padding: 24px 0;
+  }
+
+  footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--panel-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .copyright {
+    font-size: 11.5px;
+    color: var(--text-faint);
+  }
+
+  .admin-toggle {
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    font-size: 11.5px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    padding: 0;
+  }
+  .admin-toggle:hover { color: var(--text-dim); }
+
+  .admin-panel {
+    margin-top: 16px;
+    width: 100%;
+    background: var(--admin-bg);
+    border: 1px solid var(--admin-border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: none;
+  }
+  .admin-panel.open { display: block; }
+
+  .admin-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--admin);
+    margin: 0 0 4px;
+  }
+
+  .admin-desc {
+    font-size: 12.5px;
+    color: var(--text-dim);
+    margin: 0 0 14px;
+    line-height: 1.5;
+  }
+
+  .admin-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  #adminPassword { width: 160px; }
+
+  .btn-danger {
+    background: var(--danger);
+    border: 1px solid var(--danger);
+    color: #fff;
+  }
+  .btn-danger:hover { background: #c73a2d; }
+  .btn-danger:disabled { opacity: 0.45; }
+
+  .admin-msg {
+    font-size: 12.5px;
+    margin-top: 10px;
+    min-height: 16px;
+  }
+  .admin-msg.error { color: var(--danger); }
+  .admin-msg.ok { color: var(--ok); }
+
+  .banner {
+    display: none;
+    background: var(--admin-bg);
+    border: 1px solid var(--admin-border);
+    color: var(--admin);
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+  }
+  .banner.show { display: block; }
+
+  .status {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a1a;
+    border: 1px solid var(--panel-border-hi);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .status.show { opacity: 1; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>팀 리플렉션 보드</h1>
+      </div>
+      <div class="zeiss-mark">ZEISS</div>
+    </header>
+    <p class="sub">각 항목에 본인 의견을 남기면 팀 전체에 공유됩니다. 다른 참여자의 의견도 함께 확인하세요.</p>
+
+    <div class="banner" id="dbBanner">서버에 연결할 수 없습니다. 네트워크 상태를 확인하거나 잠시 후 새로고침해주세요.</div>
+
+    <div class="toolbar">
+      <div class="name-field">
+        <label for="nameInput">이름</label>
+        <input id="nameInput" type="text" placeholder="홍길동" maxlength="20">
+      </div>
+      <div class="toolbar-right">
+        <div class="sync-state"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">연결 중…</span></div>
+        <button class="btn" id="downloadBtn">전체 데이터 다운로드</button>
+      </div>
+    </div>
+
+    <div class="board" id="board"></div>
+
+    <footer>
+      <div>
+        <button class="admin-toggle" id="adminToggle">관리자</button>
+        <div class="admin-panel" id="adminPanel">
+          <p class="admin-title">데이터 초기화</p>
+          <p class="admin-desc">다른 팀이 이어서 사용할 수 있도록 등록된 모든 의견을 삭제합니다. 이 작업은 되돌릴 수 없으며, 초기화 전 데이터를 먼저 다운로드하는 것을 권장합니다.</p>
+          <div class="admin-row">
+            <input id="adminPassword" type="password" placeholder="관리자 비밀번호" autocomplete="off">
+            <button class="btn btn-danger" id="clearBtn">전체 데이터 초기화</button>
+          </div>
+          <p class="admin-msg" id="adminMsg"></p>
+        </div>
+      </div>
+      <p class="copyright">© 2026 Joanna Lee. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <div class="status" id="status"></div>
+
+<script>
+const API_URL = '/.netlify/functions/entries';
+const POLL_INTERVAL_MS = 6000;
+
+const CATEGORIES = [
+  { key: 'stop', label: 'STOP', prompt: '무엇을 줄이면 고객/팀에 더 도움이 될까?' },
+  { key: 'start', label: 'START', prompt: '내일부터 새롭게 해볼 수 있는 것은?' },
+  { key: 'amplify', label: 'AMPLIFY', prompt: '이미 잘하고 있는 것을 어떻게 더 확산할까?' }
+];
+
+let entriesByCategory = { stop: [], start: [], amplify: [] };
+let pollTimer = null;
+
+function getName() {
+  const v = document.getElementById('nameInput').value.trim();
+  return v || '익명';
+}
+
+try {
+  const savedName = localStorage.getItem('reflection-board-name');
+  if (savedName) document.getElementById('nameInput').value = savedName;
+} catch (e) {}
+
+document.getElementById('nameInput').addEventListener('change', () => {
+  try { localStorage.setItem('reflection-board-name', getName()); } catch (e) {}
+});
+
+function showStatus(msg) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function formatTime(ts) {
+  return new Date(ts).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function setSyncState(state) {
+  const dot = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  dot.className = 'sync-dot' + (state === 'live' ? ' live' : state === 'off' ? ' off' : '');
+  label.textContent = state === 'live' ? '연결됨' : state === 'off' ? '연결 끊김' : '연결 중…';
+  document.getElementById('dbBanner').classList.toggle('show', state === 'off');
+}
+
+function renderBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    const col = document.createElement('div');
+    col.className = 'col';
+    const entries = entriesByCategory[cat.key] || [];
+
+    col.innerHTML = `
+      <div class="col-head">
+        <span class="tag ${cat.key}">${cat.label}</span>
+        <span class="count-badge">${entries.length}건</span>
+      </div>
+      <p class="prompt">${cat.prompt}</p>
+      <textarea id="input-${cat.key}" placeholder="의견을 입력하세요..."></textarea>
+      <button class="submit-btn" data-key="${cat.key}" id="submit-${cat.key}">등록</button>
+      <div class="entries" id="entries-${cat.key}">
+        ${entries.length === 0
+          ? '<div class="empty-state">아직 등록된 의견이 없습니다</div>'
+          : entries.map(e => `
+            <div class="entry ${cat.key}">
+              <div class="entry-meta">
+                <span class="entry-name">${escapeHtml(e.name)}</span>
+                <span class="entry-time">${formatTime(e.ts)}</span>
+              </div>
+              <div class="entry-text">${escapeHtml(e.text)}</div>
+            </div>
+          `).join('')}
+      </div>
+    `;
+    board.appendChild(col);
+  });
+
+  document.querySelectorAll('.submit-btn').forEach(btn => {
+    btn.addEventListener('click', () => submitEntry(btn.dataset.key));
+  });
+}
+
+function applyEntries(list) {
+  const fresh = { stop: [], start: [], amplify: [] };
+  list.forEach(e => { if (fresh[e.category]) fresh[e.category].push(e); });
+  Object.keys(fresh).forEach(k => fresh[k].sort((a, b) => b.ts - a.ts));
+  entriesByCategory = fresh;
+  renderBoard();
+}
+
+async function loadAll() {
+  try {
+    const res = await fetch(API_URL, { method: 'GET' });
+    if (!res.ok) throw new Error('load failed: ' + res.status);
+    const data = await res.json();
+    applyEntries(data.entries || []);
+    setSyncState('live');
+  } catch (e) {
+    console.error('load failed', e);
+    setSyncState('off');
+  }
+}
+
+async function submitEntry(categoryKey) {
+  const textarea = document.getElementById(`input-${categoryKey}`);
+  const text = textarea.value.trim();
+  if (!text) return;
+
+  const btn = document.getElementById(`submit-${categoryKey}`);
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category: categoryKey, name: getName(), text })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || ('save failed: ' + res.status));
+    }
+    textarea.value = '';
+    showStatus('저장되었습니다');
+    await loadAll();
+  } catch (e) {
+    console.error('save failed', e);
+    showStatus('저장에 실패했습니다. 다시 시도해주세요.');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function buildCsv() {
+  const rows = [['카테고리', '이름', '의견', '등록시각']];
+  const order = { stop: 0, start: 1, amplify: 2 };
+  const all = [];
+  CATEGORIES.forEach(cat => {
+    (entriesByCategory[cat.key] || []).forEach(e => all.push({ ...e, label: cat.label }));
+  });
+  all.sort((a, b) => (order[a.category] - order[b.category]) || (a.ts - b.ts));
+  all.forEach(e => rows.push([e.label, e.name, e.text, formatTime(e.ts)]));
+  const csv = rows.map(r => r.map(cell => {
+    const s = String(cell ?? '');
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }).join(',')).join('\r\n');
+  return '﻿' + csv; // BOM for Excel/Korean
+}
+
+function handleDownload() {
+  const csv = buildCsv();
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '').replace(/(\d{8})(\d{4})/, '$1-$2');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `팀리플렉션보드_${stamp}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showStatus('다운로드되었습니다');
+}
+
+function setupAdminPanel() {
+  const toggle = document.getElementById('adminToggle');
+  const panel = document.getElementById('adminPanel');
+  const clearBtn = document.getElementById('clearBtn');
+  const pwInput = document.getElementById('adminPassword');
+  const msg = document.getElementById('adminMsg');
+
+  toggle.addEventListener('click', () => {
+    panel.classList.toggle('open');
+    if (panel.classList.contains('open')) pwInput.focus();
+  });
+
+  clearBtn.addEventListener('click', async () => {
+    msg.className = 'admin-msg';
+    msg.textContent = '';
+
+    const confirmed = window.confirm('등록된 모든 의견이 영구 삭제됩니다. 계속하시겠습니까?');
+    if (!confirmed) return;
+
+    clearBtn.disabled = true;
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'clear', password: pwInput.value })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        msg.className = 'admin-msg error';
+        msg.textContent = err.error || '비밀번호가 올바르지 않습니다.';
+        return;
+      }
+      pwInput.value = '';
+      msg.className = 'admin-msg ok';
+      msg.textContent = '초기화되었습니다.';
+      showStatus('데이터가 초기화되었습니다');
+      await loadAll();
+    } catch (e) {
+      console.error('clear failed', e);
+      msg.className = 'admin-msg error';
+      msg.textContent = '초기화 중 오류가 발생했습니다. 다시 시도해주세요.';
+    } finally {
+      clearBtn.disabled = false;
+    }
+  });
+}
+
+function init() {
+  renderBoard();
+  setupAdminPanel();
+  document.getElementById('downloadBtn').addEventListener('click', handleDownload);
+  loadAll();
+  pollTimer = setInterval(loadAll, POLL_INTERVAL_MS);
+}
+
+init();
+</script>
+</body>
+</html>

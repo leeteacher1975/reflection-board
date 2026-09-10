@@ -1,0 +1,9 @@
+{
+  "name": "team-reflection-board",
+  "private": true,
+  "version": "1.0.0",
+  "description": "팀 리플렉션 보드 - Netlify Functions + Blobs 기반",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
